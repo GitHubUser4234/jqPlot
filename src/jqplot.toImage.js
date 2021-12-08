@@ -232,11 +232,12 @@
 
             // somehow in here, for divs within divs, the width of the inner div should be used instead of the canvas.
 
-            if ((tagname == 'div' || tagname == 'span') && !$(el).hasClass('jqplot-highlighter-tooltip') && !$(el).hasClass('jqplot-canvasOverlay-tooltip')) {
+            if ((tagname == 'div' || tagname == 'span') && !$(el).hasClass('jqplot-highlighter-tooltip')) {
                 $(el).children().each(function() {
                     _jqpToImage(this, left, top);
                 });
                 var text = $(el).jqplotChildText();
+
 
                 if (text) {
                     newContext.font = $(el).jqplotGetComputedFontStyle();
@@ -260,10 +261,17 @@
                 $(el).find('div.jqplot-table-legend-swatch-outline').each(function() {
                     // get the first div and stroke it
                     var elem = $(this);
-                    newContext.strokeStyle = elem.css('border-top-color');
-                    var l = left + elem.position().left;
-                    var t = top + elem.position().top;
-                    newContext.strokeRect(l, t, elem.innerWidth(), elem.innerHeight());
+					var elOffset = $(el).offset();
+					
+					var rowOffset = elem.parent().offset();
+					
+					var customPosition = {
+						top: rowOffset.top - elOffset.top + parseInt(elem.parent().css('padding-top'), 0),
+						left: rowOffset.left - elOffset.left + parseInt(elem.parent().css('padding-left'), 0)
+					};
+					
+                    var l = left + customPosition.left;
+                    var t = top + customPosition.top;
 
                     // now fill the swatch
                     
@@ -273,8 +281,19 @@
                     var w = elem.innerWidth() - 2 * parseInt(elem.css('padding-left'), 10);
 
                     var swatch = elem.children('div.jqplot-table-legend-swatch');
-                    newContext.fillStyle = swatch.css('background-color');
+					var swatchStyle = swatch.attr('style');
+                    newContext.fillStyle = swatchStyle.slice(0, swatchStyle.length - 1).split(';').map(x => x.split(':'))[1][1];
                     newContext.fillRect(l, t, w, h);
+					
+					var backgroundStyle = swatchStyle.slice(0, swatchStyle.length - 1).split(';').map(x => x.split(':'))[0][1];
+					if(backgroundStyle&&backgroundStyle.includes('url')){
+						console.log(backgroundStyle);
+						 newContext.fillStyle = '#fff';
+                    newContext.fillRect(l+8, t+8, elem.innerWidth()-18, elem.innerHeight()-18);
+						var img = new Image();
+						img.src = backgroundStyle.substring(backgroundStyle.indexOf("url(\"") + 5, backgroundStyle.lastIndexOf("\")"));
+					newContext.drawImage(img, l+10, t+10);
+					}
                 });
 
                 // now add text
@@ -292,12 +311,7 @@
             }
 
             else if (tagname == 'canvas') {
-                // newContext.drawImage(el, left, top);
-                // chart not scale correctly for high dpi canvas, need w,h for the fix:
-                var h = $(el).innerHeight() - 2 * parseInt($(el).css('padding-top'), 10);
-                var w = $(el).innerWidth() - 2 * parseInt($(el).css('padding-left'), 10);
-
-                newContext.drawImage(el, left, top, w, h);
+                newContext.drawImage(el, left, top);
             }
         }
         $(this).children().each(function() {
