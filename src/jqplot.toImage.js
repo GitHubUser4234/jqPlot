@@ -221,7 +221,7 @@
 
         }
 
-        function _jqpToImage(el, x_offset, y_offset) {
+         function _jqpToImage(el, x_offset, y_offset) {
             var tagname = el.tagName.toLowerCase();
             var p = $(el).position();
             var css = window.getComputedStyle ?  window.getComputedStyle(el, "") : el.currentStyle; // for IE < 9
@@ -287,16 +287,17 @@
 					
 					var backgroundStyle = swatchStyle.slice(0, swatchStyle.length - 1).split(';').map(x => x.split(':'))[0][1];
 					if(backgroundStyle&&backgroundStyle.includes('url')){
-						console.log(backgroundStyle);
-						 newContext.fillStyle = '#fff';
+						 newContext.fillStyle = '#ffffff';
                     newContext.fillRect(l+8, t+8, elem.innerWidth()-18, elem.innerHeight()-18);
 						var img = new Image();
 						img.src = backgroundStyle.substring(backgroundStyle.indexOf("url(\"") + 5, backgroundStyle.lastIndexOf("\")"));
-					newContext.drawImage(img, l+10, t+10);
+ 					     newContext.drawImage(img, l+10, t+10);
 					}
                 });
 
                 // now add text
+
+               var tableSize=$(el).find('td').length;
 
                 $(el).find('td.jqplot-table-legend-label').each(function(){
                     var elem = $(this);
@@ -304,14 +305,18 @@
                     var t = top + elem.position().top + parseInt(elem.css('padding-top'), 10);
                     newContext.font = elem.jqplotGetComputedFontStyle();
                     newContext.fillStyle = elem.css('color');
-                    writeWrappedText(elem, newContext, elem.text(), l, t, w);
+                    writeWrappedText(elem, newContext, elem.text(), l, t+(tableSize<7?3:20), w);
                 });
 
                 var elem = null;
             }
 
             else if (tagname == 'canvas') {
-                newContext.drawImage(el, left, top);
+				var hh = $(el).innerHeight() - 2 * parseInt($(el).css('padding-top'), 10);
+                var ww = $(el).innerWidth() - 2 * parseInt($(el).css('padding-left'), 10);
+
+                newContext.drawImage(el, left, top, ww, hh);
+                //newContext.drawImage(el, left, top);
             }
         }
         $(this).children().each(function() {
